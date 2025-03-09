@@ -19,7 +19,7 @@ function getComputerChoice() {
 function playRound(humanChoice, computerChoice) {
   if (humanChoice === computerChoice) {
     return {
-      message: confirm(`Tie. You both chose ${humanChoice}.`),
+      message: alert(`Tie. You both chose ${humanChoice}.`),
     };
   }
 
@@ -31,7 +31,7 @@ function playRound(humanChoice, computerChoice) {
 
   if (winningChoice[humanChoice] === computerChoice) {
     return {
-      message: confirm(
+      message: alert(
         `You win! ${capitalizeFirstLetter(
           humanChoice
         )} beats ${computerChoice}.`
@@ -41,7 +41,7 @@ function playRound(humanChoice, computerChoice) {
   }
 
   return {
-    message: confirm(
+    message: alert(
       `You lose! ${capitalizeFirstLetter(computerChoice)} beats ${humanChoice}.`
     ),
     winner: "computer",
@@ -64,11 +64,16 @@ function playGame() {
       computerScore++;
     }
   }
-
-  if (humanScore > computerScore) {
-    return confirm("Congratulations! You win!");
+  if (humanScore === computerScore) {
+    if (confirm("Tie. Would you like to play again?")) {
+      playGame();
+    } else {
+      return;
+    }
+  } else if (humanScore > computerScore) {
+    return alert("Congratulations! You win!");
   } else {
-    return confirm("Game over.");
+    return alert("Game over.");
   }
 }
 

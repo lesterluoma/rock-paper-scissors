@@ -1,84 +1,108 @@
-function getHumanChoice() {
-  let choice = prompt("Ready? Rock, Paper, Scissors, Shoot!", "rock");
+const WINNING_SCORE = 5;
+const CHOICES = ["rock", "paper", "scissors"];
+const START_MESSAGE = "Choose rock, paper, or scissors to start.";
 
-  return choice.toLowerCase();
-}
+// Maps each choice to the choice it beats.
+const winningChoice = {
+  rock: "scissors",
+  paper: "rock",
+  scissors: "paper",
+};
+
+// Everything the page displays is derived from this state by render().
+let humanScore = 0;
+let computerScore = 0;
+let gameOver = false;
+let roundMessage = START_MESSAGE;
+let gameMessage = "";
+
+const choiceButtons = document.querySelectorAll(".choice");
+const humanScoreEl = document.querySelector("#human-score");
+const computerScoreEl = document.querySelector("#computer-score");
+const roundMessageEl = document.querySelector("#round-message");
+const gameMessageEl = document.querySelector("#game-message");
+const resetButton = document.querySelector("#reset");
 
 function getComputerChoice() {
-  let choice = Math.floor(Math.random() * 3); // 0 - 2
-
-  if (choice === 2) {
-    return "rock";
-  } else if (choice === 1) {
-    return "paper";
-  } else {
-    return "scissors";
-  }
+  return CHOICES[Math.floor(Math.random() * CHOICES.length)];
 }
 
+// Returns the outcome instead of showing it, so the UI code decides how to display it.
 function playRound(humanChoice, computerChoice) {
   if (humanChoice === computerChoice) {
     return {
-      message: alert(`Tie. You both chose ${humanChoice}.`),
+      message: `Tie. You both chose ${humanChoice}.`,
+      winner: null,
     };
   }
 
-  const winningChoice = {
-    rock: "scissors",
-    paper: "rock",
-    scissors: "paper",
-  };
-
   if (winningChoice[humanChoice] === computerChoice) {
     return {
-      message: alert(
-        `You win! ${capitalizeFirstLetter(
-          humanChoice
-        )} beats ${computerChoice}.`
-      ),
+      message: `You win! ${capitalizeFirstLetter(humanChoice)} beats ${computerChoice}.`,
       winner: "human",
     };
   }
 
   return {
-    message: alert(
-      `You lose! ${capitalizeFirstLetter(computerChoice)} beats ${humanChoice}.`
-    ),
+    message: `You lose! ${capitalizeFirstLetter(computerChoice)} beats ${humanChoice}.`,
     winner: "computer",
   };
 }
 
-function playGame() {
-  let computerScore = 0;
-  let humanScore = 0;
+function handleChoice(humanChoice) {
+  // The buttons are disabled after the game ends; this guards against any other trigger.
+  if (gameOver) return;
 
-  for (let i = 0; i < 5; i++) {
-    let humanSelection = getHumanChoice();
-    let computerSelection = getComputerChoice();
-    let result = playRound(humanSelection, computerSelection);
+  const result = playRound(humanChoice, getComputerChoice());
 
-    if (result.winner === "human") {
-      humanScore++;
-    }
-    if (result.winner === "computer") {
-      computerScore++;
-    }
+  if (result.winner === "human") humanScore++;
+  if (result.winner === "computer") computerScore++;
+  roundMessage = result.message;
+
+  if (humanScore === WINNING_SCORE || computerScore === WINNING_SCORE) {
+    endGame();
   }
-  if (humanScore === computerScore) {
-    if (confirm("Tie. Would you like to play again?")) {
-      playGame();
-    } else {
-      return;
-    }
-  } else if (humanScore > computerScore) {
-    return alert("Congratulations! You win!");
-  } else {
-    return alert("Game over.");
-  }
+
+  render();
+}
+
+function endGame() {
+  gameOver = true;
+  gameMessage =
+    humanScore === WINNING_SCORE
+      ? "Congratulations! You won the game!"
+      : "Game over. The computer won.";
+}
+
+function resetGame() {
+  humanScore = 0;
+  computerScore = 0;
+  gameOver = false;
+  roundMessage = START_MESSAGE;
+  gameMessage = "";
+
+  render();
+}
+
+// Draws the current state to the page. Call it after any state change.
+function render() {
+  humanScoreEl.textContent = humanScore;
+  computerScoreEl.textContent = computerScore;
+  roundMessageEl.textContent = roundMessage;
+  gameMessageEl.textContent = gameMessage;
+
+  choiceButtons.forEach((button) => (button.disabled = gameOver));
+  resetButton.hidden = !gameOver;
 }
 
 function capitalizeFirstLetter(val) {
   return String(val).charAt(0).toUpperCase() + String(val).slice(1);
 }
 
-playGame();
+choiceButtons.forEach((button) => {
+  button.addEventListener("click", () => handleChoice(button.dataset.choice));
+});
+
+resetButton.addEventListener("click", resetGame);
+
+render();
